@@ -196,9 +196,10 @@ Part of the agent reliability stack — all `@mukundakatta/*` scoped, all zero-d
 - **`@mukundakatta/agentfit`** — fit messages to budget. *Fit it.* (this)
 - [`@mukundakatta/agentsnap`](https://www.npmjs.com/package/@mukundakatta/agentsnap) — snapshot tests for tool-call traces. *Test it.*
 - [`@mukundakatta/agentguard`](https://www.npmjs.com/package/@mukundakatta/agentguard) — network egress firewall. *Sandbox it.*
+- [`@mukundakatta/agentvet`](https://www.npmjs.com/package/@mukundakatta/agentvet) — tool-arg validator. *Vet it.*
 - [`@mukundakatta/agentcast`](https://www.npmjs.com/package/@mukundakatta/agentcast) — structured output enforcer. *Validate it.*
 
-Natural pipeline: **fit** the prompt → **guard** the network → **snap** the run → **cast** the output.
+Natural pipeline: **fit → guard → snap → vet → cast**.
 
 ## Status
 
