@@ -1,0 +1,52 @@
+{
+  "name": "@mukundakatta/agentfit",
+  "version": "0.1.0",
+  "description": "Fit your messages into the LLM context window. Token-aware truncation with multiple strategies (drop-oldest, drop-middle, priority), pluggable tokenizers, zero dependencies.",
+  "type": "module",
+  "main": "src/index.js",
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    }
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test 'test/**/*.test.js'",
+    "test:examples": "node --test 'examples/**/*.test.js'",
+    "test:all": "node --test 'test/**/*.test.js' 'examples/**/*.test.js'"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "llm",
+    "context-window",
+    "tokens",
+    "tokenizer",
+    "truncate",
+    "context-management",
+    "anthropic",
+    "openai",
+    "tiktoken",
+    "gpt",
+    "claude"
+  ],
+  "author": "MukundaKatta",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MukundaKatta/agentfit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/MukundaKatta/agentfit/issues"
+  },
+  "homepage": "https://github.com/MukundaKatta/agentfit#readme"
+}
