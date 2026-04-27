@@ -1,10 +1,13 @@
 {
   "name": "@mukundakatta/agentfit",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Fit your messages into the LLM context window. Token-aware truncation with multiple strategies (drop-oldest, drop-middle, priority), pluggable tokenizers, zero dependencies.",
   "type": "module",
   "main": "src/index.js",
   "types": "./src/index.d.ts",
+  "bin": {
+    "agentfit": "src/cli.js"
+  },
   "exports": {
     ".": {
       "types": "./src/index.d.ts",

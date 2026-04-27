@@ -183,6 +183,22 @@ count(text, { tokenizer: exactCounter });
 fit(messages, { maxTokens: 50_000, tokenizer: exactCounter });
 ```
 
+## CLI
+
+`@mukundakatta/agentfit` ships an `agentfit` binary for one-liners and CI use:
+
+```bash
+# Token count for a literal string or for a JSON message array
+npx -p @mukundakatta/agentfit agentfit count "hello world" --model claude-sonnet-4-6
+# → {"tokens":4,"model":"claude-sonnet-4-6"}
+
+# Fit a chat history under a budget; reads stdin with '-'
+cat history.json | npx -p @mukundakatta/agentfit agentfit fit - \
+  --max-tokens 100000 --model claude-sonnet-4-6 --preserve-last-n 5 --pretty
+```
+
+Pass `-` to read from stdin or any file path to read from disk. Output is JSON to stdout (use `--pretty` for indented). Exit code is `0` on success, `1` when the budget can't be reached, `2` on usage errors. Run `agentfit --help` for the full subcommand reference.
+
 ## What this is not
 
 - **Not a tokenizer.** It estimates fast and pluggably. For exact counts, wrap your favourite tokenizer.
