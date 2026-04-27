@@ -51,9 +51,5 @@
   "bugs": {
     "url": "https://github.com/MukundaKatta/agentfit/issues"
   },
-  "homepage": "https://github.com/MukundaKatta/agentfit#readme",
-  "funding": [
-    "https://github.com/sponsors/MukundaKatta",
-    "https://agent-stack.dev"
-  ]
+  "homepage": "https://github.com/MukundaKatta/agentfit#readme"
 }
