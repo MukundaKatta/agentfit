@@ -55,7 +55,7 @@ export function count(input, opts = {}) {
     let total = 0;
     for (const msg of input) {
       if (msg && typeof msg === 'object') {
-        const content = typeof msg.content === 'string' ? msg.content : '';
+        const content = stringifyContent(msg.content);
         const role = typeof msg.role === 'string' ? msg.role : '';
         total += tokenizer(content) + (role ? tokenizer(role) : 0) + overhead;
       }
@@ -64,6 +64,52 @@ export function count(input, opts = {}) {
   }
 
   throw new TypeError('count: input must be a string or array of messages');
+}
+
+/**
+ * Flatten a message's `content` field into a string suitable for tokenizing.
+ * Handles three shapes:
+ *  - string (OpenAI / classic Chat Completions)
+ *  - array of content blocks (Anthropic Messages API, Bedrock, OpenAI
+ *    Responses API): walks block.text, block.input (tool_use), and
+ *    nested block.content (tool_result), skipping non-text blocks like
+ *    image/document.
+ *  - anything else: returns ''
+ *
+ * Exported because callers occasionally need the same flattening when
+ * computing custom per-message overhead.
+ *
+ * @param {unknown} content
+ * @returns {string}
+ */
+export function stringifyContent(content) {
+  if (typeof content === 'string') return content;
+  if (!Array.isArray(content)) return '';
+  const parts = [];
+  for (const block of content) {
+    if (!block || typeof block !== 'object') continue;
+    const type = block.type;
+    if (type === 'text' && typeof block.text === 'string') {
+      parts.push(block.text);
+    } else if (type === 'tool_use') {
+      // Approximate the JSON the model emitted for the tool call.
+      try {
+        parts.push(JSON.stringify({ name: block.name, input: block.input }));
+      } catch {
+        parts.push(String(block.name ?? ''));
+      }
+    } else if (type === 'tool_result') {
+      // Nested content can be string or array; recurse.
+      parts.push(stringifyContent(block.content));
+    } else if (type === 'input_text' && typeof block.text === 'string') {
+      // OpenAI Responses API shape.
+      parts.push(block.text);
+    } else if (type === 'output_text' && typeof block.text === 'string') {
+      parts.push(block.text);
+    }
+    // image, document, redacted_thinking, etc. — skipped (no plain text).
+  }
+  return parts.join('\n');
 }
 
 /**

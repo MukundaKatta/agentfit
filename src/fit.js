@@ -1,4 +1,4 @@
-import { count, resolveTokenizer } from './count.js';
+import { count, resolveTokenizer, stringifyContent } from './count.js';
 import { OverBudgetError } from './errors.js';
 
 /**
@@ -123,7 +123,7 @@ function isProtected(msg, index, totalCount, config) {
 
 function messageTokens(msg, tokenizer, countOpts) {
   if (!msg || typeof msg !== 'object') return 0;
-  const content = typeof msg.content === 'string' ? msg.content : '';
+  const content = stringifyContent(msg.content);
   const role = typeof msg.role === 'string' ? msg.role : '';
   // Use count() so per-message overhead resolution stays consistent
   return count([{ role, content }], countOpts);
