@@ -1,5 +1,11 @@
 # agentfit
 
+[![npm version](https://img.shields.io/npm/v/@mukundakatta/agentfit.svg)](https://www.npmjs.com/package/@mukundakatta/agentfit)
+[![npm downloads](https://img.shields.io/npm/dm/@mukundakatta/agentfit.svg)](https://www.npmjs.com/package/@mukundakatta/agentfit)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+[![Node](https://img.shields.io/node/v/@mukundakatta/agentfit.svg)](https://nodejs.org)
+[![Tests](https://img.shields.io/badge/tests-40%2F40-brightgreen.svg)](./test)
+
 **Fit your messages into the LLM context window.** Token-aware truncation with three strategies (drop-oldest, drop-middle, priority), per-model estimators, pluggable tokenizers (so you can wrap tiktoken if you need exact counts). Zero runtime dependencies.
 
 ```bash
@@ -219,7 +225,7 @@ Natural pipeline: **fit → guard → snap → vet → cast**.
 
 ## Status
 
-v0.1.0 — initial release. Core API stable. TypeScript types included. 27/27 tests, CI on Node 20/22/24.
+v0.1.2 — bug-fix release: Anthropic / OpenAI Responses content-blocks shape now counts correctly. Core API stable. TypeScript types included. 40/40 tests, CI on Node 20/22/24.
 
 **v0.2 plans** (post-real-world-feedback):
 - Built-in tiktoken adapter as an optional separate package
