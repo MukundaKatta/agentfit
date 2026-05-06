@@ -6,6 +6,8 @@
 [![Node](https://img.shields.io/node/v/@mukundakatta/agentfit.svg)](https://nodejs.org)
 [![Tests](https://img.shields.io/badge/tests-40%2F40-brightgreen.svg)](./test)
 
+> 📖 Part of the **[agent-stack](https://dev.to/mukundakatta/i-built-5-tiny-libraries-to-stop-my-ai-agents-from-misbehaving-in-production-3oni)** — 5 tiny libraries to stop AI agents from misbehaving in production.
+
 **Fit your messages into the LLM context window.** Token-aware truncation with three strategies (drop-oldest, drop-middle, priority), per-model estimators, pluggable tokenizers (so you can wrap tiktoken if you need exact counts). Zero runtime dependencies.
 
 ```bash
