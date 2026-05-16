@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🔴 Budget overshoot / priority-1 drop (security)
+    url: https://github.com/MukundaKatta/agentfit/security/advisories/new
+    about: If fit() returned a result that exceeds maxTokens, or dropped a priority-1 message, use private vulnerability reporting instead of a public issue.
+  - name: General security policy
+    url: https://github.com/MukundaKatta/agentfit/blob/main/SECURITY.md
+    about: Full threat-model scope and disclosure timeline.
+  - name: Tokenizer accuracy
+    url: https://github.com/MukundaKatta/agentfit#estimators
+    about: agentfit ships estimators, not tokenizers. A few-percent drift is by design. For exact agreement, plug in tiktoken or Anthropic's tokenizer via the estimator hook.
+  - name: Other agent-stack libraries
+    url: https://github.com/MukundaKatta/agent-stack
+    about: For agentsnap / agentguard / agentcast / agentvet / agenttrace / agentbudget, the canonical landing page lists all six.
