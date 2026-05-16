@@ -5,19 +5,180 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    name: Node ${{ matrix.node }} / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        node: [20, 22, 24]
+        node: ['20', '22', '24']
+        os: [ubuntu-latest]
+        include:
+          - node: '22'
+            os: macos-latest
+          - node: '22'
+            os: windows-latest
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
-      - run: node --version
-      - run: node --test 'test/**/*.test.js'
-      - run: node --test 'examples/**/*.test.js'
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Unit tests
+        run: node --test 'test/**/*.test.js'
+
+      - name: Runnable examples (smoke)
+        run: node --test 'examples/**/*.test.js'
+
+  budget-overshoot-smoke:
+    name: budget-overshoot smoke
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # The whole pitch of fit() is "the returned messages array fits the
+      # token budget." This smoke feeds a 101-message conversation through
+      # the priority strategy with a budget that forces dropping most of
+      # it, then asserts:
+      #   (a) the result's token count is <= the budget
+      #   (b) the priority:100 system message survives
+      #
+      # If a refactor ever silently weakens either invariant, this catches
+      # it before release.
+      - name: Assert fit() honors maxTokens + protects high-priority
+        run: |
+          node --input-type=module -e '
+            import { count, fit } from "./src/index.js";
+
+            const messages = [
+              { role: "system", content: "you are a helpful assistant.", priority: 100 },
+            ];
+            for (let i = 0; i < 100; i++) {
+              messages.push({
+                role: i % 2 === 0 ? "user" : "assistant",
+                content: "msg ".repeat(20),
+                priority: 0,
+              });
+            }
+
+            const BUDGET = 200;
+            const r = fit(messages, { maxTokens: BUDGET, strategy: "priority" });
+            console.log("input:", messages.length, "result:", r.messages.length, "tokens after:", r.tokens.after + "/" + BUDGET);
+
+            if (r.tokens.after > BUDGET) {
+              console.error("FAIL: budget overshoot. Got " + r.tokens.after + " for budget " + BUDGET);
+              process.exit(1);
+            }
+            const high = r.messages.find(m => m.priority === 100);
+            if (!high) {
+              console.error("FAIL: priority:100 message was dropped");
+              process.exit(1);
+            }
+            console.log("ok: budget honored, high-priority preserved");
+          '
+
+  coverage:
+    name: coverage gate
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      # Thresholds encoded in the npm script (75% branches /
+      # 85% lines+functions+statements). c8 fails the job below them.
+      - name: Coverage
+        run: npm run test:coverage
+
+  zero-runtime-deps-gate:
+    name: zero runtime deps
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Assert package.json has no runtime dependencies
+        run: |
+          node -e '
+            const pkg = require("./package.json");
+            const deps = pkg.dependencies || {};
+            const keys = Object.keys(deps);
+            if (keys.length > 0) {
+              console.error("agentfit is zero-runtime-dep by design.");
+              console.error("This PR adds: " + keys.join(", "));
+              console.error("If this is intentional, remove this CI step in the same PR and explain why in the PR description.");
+              process.exit(1);
+            }
+          '
+
+  package-smoke:
+    name: npm pack content check
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: npm pack dry-run + content check
+        run: |
+          npm pack --dry-run
+          npm pack --json | node -e '
+            const fs = require("fs");
+            const j = JSON.parse(fs.readFileSync(0, "utf8"));
+            const files = j[0].files.map(f => f.path);
+            const required = [
+              "src/index.js",
+              "src/index.d.ts",
+              "src/cli.js",
+              "src/count.js",
+              "src/fit.js",
+              "src/errors.js",
+              "README.md",
+              "LICENSE",
+            ];
+            const missing = required.filter(r => !files.includes(r) && !files.some(f => f.startsWith(r)));
+            if (missing.length) {
+              console.error("missing from tarball:", missing);
+              process.exit(1);
+            }
+            const leaked = files.filter(f => f.startsWith("node_modules/"));
+            if (leaked.length) {
+              console.error("node_modules leaked into tarball:", leaked);
+              process.exit(1);
+            }
+          '
