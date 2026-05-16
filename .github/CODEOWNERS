@@ -1,0 +1,10 @@
+# Default owner for everything in this repo. Used by GitHub to auto-request
+# review on PRs and to define the contact point for security disclosures.
+* @MukundaKatta
+
+# Token counting + budget-fit strategy files. Bugs here either silently
+# overshoot the context budget (caller assumed N tokens, model sees N+K)
+# or drop priority-1 messages that should never be dropped. Worth extra
+# scrutiny.
+/src/count.js  @MukundaKatta
+/src/fit.js    @MukundaKatta

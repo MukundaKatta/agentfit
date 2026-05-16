@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+
+Production-polish branch (this PR): adds `SECURITY.md` (with silent-budget-overshoot / priority-1 drop / estimator-drift surfaces called out), `CODE_OF_CONDUCT.md`, `CODEOWNERS` flagging `count.js` + `fit.js` for extra scrutiny, Dependabot config, issue + PR templates, release workflow with npm provenance OIDC + zero-deps + budget-overshoot smoke, expanded CI (macOS + Windows spot-checks, coverage gate, `npm pack` content check, budget-overshoot smoke that asserts `fit()` actually fits). No source changes.
+
 ## [0.1.2] — 2026-04-28
 
 ### Fixed

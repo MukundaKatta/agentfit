@@ -2,9 +2,11 @@
 
 [![npm version](https://img.shields.io/npm/v/@mukundakatta/agentfit.svg)](https://www.npmjs.com/package/@mukundakatta/agentfit)
 [![npm downloads](https://img.shields.io/npm/dm/@mukundakatta/agentfit.svg)](https://www.npmjs.com/package/@mukundakatta/agentfit)
+[![CI](https://github.com/MukundaKatta/agentfit/actions/workflows/ci.yml/badge.svg)](https://github.com/MukundaKatta/agentfit/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Node](https://img.shields.io/node/v/@mukundakatta/agentfit.svg)](https://nodejs.org)
 [![Tests](https://img.shields.io/badge/tests-40%2F40-brightgreen.svg)](./test)
+[![runtime deps](https://img.shields.io/badge/runtime%20deps-0-brightgreen)](./package.json)
 
 > 📖 Part of the **[agent-stack](https://dev.to/mukundakatta/i-built-5-tiny-libraries-to-stop-my-ai-agents-from-misbehaving-in-production-3oni)** — 5 tiny libraries to stop AI agents from misbehaving in production.
 
