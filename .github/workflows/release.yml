@@ -1,0 +1,133 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g. v0.1.3)'
+        required: true
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    if: github.repository == 'MukundaKatta/agentfit'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Resolve tag
+        id: tag
+        run: |
+          if [ -n "${{ github.event.inputs.tag }}" ]; then
+            echo "ref=${{ github.event.inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Verify tag matches package.json version
+        run: |
+          tag="${{ steps.tag.outputs.ref }}"
+          pkg_version=$(node -p "require('./package.json').version")
+          tag_version="${tag#v}"
+          if [ "$tag_version" != "$pkg_version" ]; then
+            echo "::error::Tag ($tag_version) does not match package.json version ($pkg_version). Refusing to publish."
+            exit 1
+          fi
+
+      - name: Verify zero runtime dependencies
+        run: |
+          node -e '
+            const pkg = require("./package.json");
+            const deps = pkg.dependencies || {};
+            if (Object.keys(deps).length > 0) {
+              console.error("Refusing to release: agentfit should have zero runtime deps; package.json lists: " + Object.keys(deps).join(", "));
+              process.exit(1);
+            }
+          '
+
+      - name: Install
+        run: npm ci
+
+      - name: Unit tests
+        run: node --test 'test/**/*.test.js'
+
+      - name: Runnable examples (smoke)
+        run: node --test 'examples/**/*.test.js'
+
+      - name: Budget-overshoot smoke
+        run: |
+          node --input-type=module -e '
+            import { count, fit } from "./src/index.js";
+            const messages = [
+              { role: "system", content: "you are a helpful assistant.", priority: 100 },
+            ];
+            for (let i = 0; i < 100; i++) {
+              messages.push({ role: i % 2 === 0 ? "user" : "assistant", content: "msg ".repeat(20), priority: 0 });
+            }
+            const BUDGET = 200;
+            const r = fit(messages, { maxTokens: BUDGET, strategy: "priority" });
+            if (r.tokens.after > BUDGET) {
+              console.error("FAIL: budget overshoot at release time. Refusing to publish.");
+              process.exit(1);
+            }
+            const high = r.messages.find(m => m.priority === 100);
+            if (!high) {
+              console.error("FAIL: priority:100 message dropped at release time. Refusing to publish.");
+              process.exit(1);
+            }
+          '
+
+      - name: Coverage gate
+        run: npm run test:coverage
+
+      - name: Publish to npm with provenance
+        run: npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+
+      - name: Extract release notes from CHANGELOG
+        id: notes
+        run: |
+          tag="${{ steps.tag.outputs.ref }}"
+          version="${tag#v}"
+          awk -v ver="$version" '
+            $0 ~ "^## \\[" ver "\\]" { capture=1; next }
+            capture && /^## \[/ { exit }
+            capture { print }
+          ' CHANGELOG.md > /tmp/release-notes.md
+          if [ ! -s /tmp/release-notes.md ]; then
+            echo "No CHANGELOG section for $version; using generic notes."
+            echo "Release $tag of @mukundakatta/agentfit." > /tmp/release-notes.md
+          fi
+          echo "path=/tmp/release-notes.md" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.ref }}
+          name: ${{ steps.tag.outputs.ref }}
+          body_path: ${{ steps.notes.outputs.path }}
+          draft: false
+          prerelease: false
