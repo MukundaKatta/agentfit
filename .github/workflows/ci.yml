@@ -19,5 +19,5 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - run: node --version
-      - run: node --test 'test/**/*.test.js'
-      - run: node --test 'examples/**/*.test.js'
+      - run: npm test
+      - run: npm run test:examples
